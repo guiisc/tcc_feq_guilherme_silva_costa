@@ -1,6 +1,6 @@
 import numpy as np
-np.random.seed(0)
 import pandas as pd
+import matplotlib.pyplot as plt
 from scipy.integrate import odeint
 from scipy.optimize import fsolve
 
@@ -33,31 +33,50 @@ def generate_values(Vmin, Vmax, n):
     return abs(V)
 
 class steadyState:
-    def __init__(self, Ce, k1, k2, Q, V):
-        self.Ce = Ce
-        self.Cae = Ce[0]
-        self.Cbe = Ce[1]
-        self.Cce = Ce[2]
-        self.Cde = Ce[3]
-        self.k1 = k1
-        self.k2 = k2
-        self.Q = Q
-        self.V = V
+    def __init__(self, data):
+        self.Cae = data['Cae']
+        self.Cbe = data['Cbe']
+        self.Cce = data['Cce']
+        self.Cde = data['Cde']
+        self.k01 = data['k01']
+        self.Ea1 = data['Ea1']
+        self.k02 = data['k02']
+        self.Ea2 = data['Ea2']
+        self.T = data['T']
+        self.Q = data['Q']
+        self.V = data['V']
     
-    def ra(self, Ca, Cb, Cc, Cd):
-        return -self.k1*Ca*Cb + self.k2*Cc*Cd
+    def cte_taxa(self, T, k0, Ea, R=8.314):
+        """
+        k0: [1/min]
+        Ea: J/ mol
+        R: J/ K. mol
+        T: K
+
+        k: [k0]
+        """
+        return k0*np.exp(-Ea/(R*T))
+    
+    def ra(self, Ca, Cb, Cc, Cd, T):
+        k1 = self.cte_taxa(T, self.k01, self.Ea1)
+        k2 = self.cte_taxa(T, self.k02, self.Ea2)
+        return -k1*Ca*Cb + k2*Cc*Cd
         
-    def dcadt(self, C):
-        Ca, Cb, Cc, Cd = C
-        dcdt = [0, 0, 0, 0]
-        dcdt[0] = self.Q*(self.Cae-Ca)/self.V + self.ra(Ca, Cb, Cc, Cd)
-        dcdt[1] = self.Q*(self.Cbe-Cb)/self.V + self.ra(Ca, Cb, Cc, Cd)
-        dcdt[2] = self.Q*(self.Cce-Cc)/self.V - self.ra(Ca, Cb, Cc, Cd)
-        dcdt[3] = self.Q*(self.Cde-Cd)/self.V - self.ra(Ca, Cb, Cc, Cd)
+    def dcadt(self, C, isotermico=True):
+        Ca, Cb, Cc, Cd, T = C
+        dcdt = [0, 0, 0, 0, 0]
+        dcdt[0] = self.Q*(self.Cae-Ca)/self.V + self.ra(Ca, Cb, Cc, Cd, T)
+        dcdt[1] = self.Q*(self.Cbe-Cb)/self.V + self.ra(Ca, Cb, Cc, Cd, T)
+        dcdt[2] = self.Q*(self.Cce-Cc)/self.V - self.ra(Ca, Cb, Cc, Cd, T)
+        dcdt[3] = self.Q*(self.Cde-Cd)/self.V - self.ra(Ca, Cb, Cc, Cd, T)
+        if isotermico:
+            dcdt[4] = 0
+        else:
+            dcdt[4] = 0
         return dcdt
 
 
-def ss_solve(Ce, k1, k2, Q, V):
+def ss_solve(data):
     """
     Ce (nx4): [Cae, Cbe, Cce, Cde]
     k1 (nx1):
@@ -66,76 +85,46 @@ def ss_solve(Ce, k1, k2, Q, V):
     V       :
     """
     out = []
-    for row in range( Ce.shape[0] ):
-        s = steadyState(Ce.loc[row].values, k1[row], k2[row], Q[row], V)
-        out.append(fsolve(s.dcadt, s.Ce))
-    return pd.DataFrame(out, columns=['Ca', 'Cb', 'Cc', 'Cd'])
-        
+    for row in range( data.shape[0] ):
+        s = steadyState(data.loc[row])
+        out.append(fsolve(s.dcadt,
+                         [s.Cae, s.Cbe, s.Cce, s.Cde, s.T]))
+    return pd.DataFrame(out, columns=['Ca', 'Cb', 'Cc', 'Cd', 'T'])
 
-
-"""------------------------------------------------------------------------"""
-"""------------------------------------------------------------------------"""
-"""------------------------------------------------------------------------"""
-class data:
-    def __init__(self, Ce, k1, k2, Q, V):
-        self.Ce = Ce
-        self.Cae = Ce[0]
-        self.Cbe = Ce[1]
-        self.Cce = Ce[2]
-        self.Cde = Ce[3]
-        self.k1 = k1
-        self.k2 = k2
-        self.Q = Q
-        self.V = V
-        
-    def dcadt(self, C, t):
-        Ca, Cb, Cc, Cd = C
-        dcdt = [0,0,0,0]
-        dcdt[0] = self.Q*(Ca-self.Cae)/self.V - self.k1*Ca*Cb + self.k2*Cc*Cd
-        dcdt[1] = self.Q*(Cb-self.Cbe)/self.V - self.k1*Ca*Cb + self.k2*Cc*Cd
-        dcdt[2] = self.Q*(Cc-self.Cce)/self.V + self.k1*Ca*Cb - self.k2*Cc*Cd
-        dcdt[3] = self.Q*(Cd-self.Cde)/self.V + self.k1*Ca*Cb - self.k2*Cc*Cd
-        return dcdt
-    
-def solve(C, n, k1, k2, Q, V):
-    t = np.linspace(0, 10, n)
-    d = data(C, k1, k2, Q, V)
-    out = pd.DataFrame(odeint(d.dcadt, d.Ce, t), columns=['Ca', 'Cb', 'Cc', 'Cd'], index=t)
+def ode_solve(data, n, t=10, row=0):
+    """
+    Solve 1 ODE
+    """
+    t = np.linspace(0, t, n)
+    s = steadyState(data.loc[row])
+    out = pd.DataFrame(odeint(s.dcadt,
+                              [s.Cae, s.Cbe, s.Cce, s.Cde, s.T],
+                              t),
+                       columns=['Ca', 'Cb', 'Cc', 'Cd', 'T'], index=t)
     out = out[out>=0].dropna()
     return out
 
-def gen_(Ca, Cb, Cc, Cd, Q, V, k1, k2):
-    n = Ca.shape[0]
-    out = []
-    for i in range(n):
-        C = [Ca[i], Cb[i], Cc[i], Cd[i]]
-        out_aux = solve(C, n, k1[i], k2[i], Q[i], V)
-        try:
-            out.append(out_aux.iloc[-1].values)
-        except:
-            print(i)
-            return out_aux
+def ode_plot(ode_solved):
+    """
     
-    return np.array(out)
+    """
+    plt.figure(figsize=(11,6))
+    axis_x = ode_solved.index/60
+    ax1 = plt.plot(axis_x, ode_solved[['Ca', 'Cb', 'Cc', 'Cd']]*100/ode_solved['Ca'][0], label=['Ca', 'Cb', 'Cc', 'Cd'], linewidth=2)
+    plt.xlabel('tempo [min]')
+    plt.ylabel('%')
+    plt.grid()
+    
+    # Temperature axis
+    ax2 = plt.twinx()
+    ax2 = ax2.plot(axis_x, ode_solved[['T']], label='T', color='black', linewidth=3)
+    
+    # complements
+    plt.xlabel('tempo [s]')
+    plt.ylabel('T [K]')
 
-def gen(data, V):
-    Ca = data['Cae']
-    Cb = data['Cbe']
-    Cc = data['Cce']
-    Cd = data['Cde']
-    Q = data['Q']
-    k1 = data['k1']
-    k2 = data['k2']
-    
-    n = data.shape[0]
-    out = []
-    for i in range(n):
-        C = [Ca[i], Cb[i], Cc[i], Cd[i]]
-        out_aux = solve(C, n, k1[i], k2[i], Q[i], V)
-        try:
-            out.append(out_aux.iloc[-1].values)
-        except:
-            print(i)
-            return out_aux
-    
-    return pd.DataFrame(np.array(out), columns=['Ca', 'Cb', 'Cc', 'Cd'])
+    ax = ax1 + ax2
+    legends = [l.get_label() for l in ax]
+    plt.legend(ax, legends, loc='best', ncol=5, )
+
+    plt.show()
