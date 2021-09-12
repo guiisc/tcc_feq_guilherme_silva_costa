@@ -33,18 +33,25 @@ def generate_values(Vmin, Vmax, n):
     return abs(V)
 
 class steadyState:
-    def __init__(self, data):
+    def __init__(self, data, isothermal=True):
         self.Cae = data['Cae']
         self.Cbe = data['Cbe']
         self.Cce = data['Cce']
         self.Cde = data['Cde']
+        
         self.k01 = data['k01']
         self.Ea1 = data['Ea1']
+        
         self.k02 = data['k02']
         self.Ea2 = data['Ea2']
+        
         self.T = data['T']
-        self.Q = data['Q']
-        self.V = data['V']
+        self.t_espacial = data['t_espacial']
+        self.dHr = data['dHr']
+        self.rho = data['rho']
+        self.Cp = data['Cp']
+        
+        self.isothermal = isothermal
     
     def cte_taxa(self, T, k0, Ea, R=8.314):
         """
@@ -62,21 +69,23 @@ class steadyState:
         k2 = self.cte_taxa(T, self.k02, self.Ea2)
         return -k1*Ca*Cb + k2*Cc*Cd
         
-    def dcadt(self, C, isotermico=True):
+    def dcadt(self, C, t):
         Ca, Cb, Cc, Cd, T = C
         dcdt = [0, 0, 0, 0, 0]
-        dcdt[0] = self.Q*(self.Cae-Ca)/self.V + self.ra(Ca, Cb, Cc, Cd, T)
-        dcdt[1] = self.Q*(self.Cbe-Cb)/self.V + self.ra(Ca, Cb, Cc, Cd, T)
-        dcdt[2] = self.Q*(self.Cce-Cc)/self.V - self.ra(Ca, Cb, Cc, Cd, T)
-        dcdt[3] = self.Q*(self.Cde-Cd)/self.V - self.ra(Ca, Cb, Cc, Cd, T)
-        if isotermico:
+        ra = self.ra(Ca, Cb, Cc, Cd, T)
+        
+        dcdt[0] = (self.Cae-Ca)/self.t_espacial + ra
+        dcdt[1] = (self.Cbe-Cb)/self.t_espacial + ra
+        dcdt[2] = (self.Cce-Cc)/self.t_espacial - ra
+        dcdt[3] = (self.Cde-Cd)/self.t_espacial - ra
+        if self.isothermal:
             dcdt[4] = 0
         else:
-            dcdt[4] = 0
+            dcdt[4] = (self.T - T)/self.t_espacial - self.dHr*ra/(self.rho* self.Cp)
         return dcdt
 
 
-def ss_solve(data):
+def ss_solve(data, isothermal=True):
     """
     Ce (nx4): [Cae, Cbe, Cce, Cde]
     k1 (nx1):
@@ -86,17 +95,17 @@ def ss_solve(data):
     """
     out = []
     for row in range( data.shape[0] ):
-        s = steadyState(data.loc[row])
+        s = steadyState(data.loc[row], isothermal)
         out.append(fsolve(s.dcadt,
                          [s.Cae, s.Cbe, s.Cce, s.Cde, s.T]))
     return pd.DataFrame(out, columns=['Ca', 'Cb', 'Cc', 'Cd', 'T'])
 
-def ode_solve(data, n, t=10, row=0):
+def ode_solve(data, n, t=10, row=0, isothermal=True):
     """
     Solve 1 ODE
     """
     t = np.linspace(0, t, n)
-    s = steadyState(data.loc[row])
+    s = steadyState(data.loc[row], isothermal)
     out = pd.DataFrame(odeint(s.dcadt,
                               [s.Cae, s.Cbe, s.Cce, s.Cde, s.T],
                               t),

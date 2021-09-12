@@ -17,8 +17,15 @@ def plot_identity_graphic(data_true, data_pred):
     plt.legend()
     plt.xlabel('true value')
     plt.ylabel('predicted value')
-    plt.title(f'$R^2$={r2:.2f}, RMSE={np.sqrt(mse):.2f}, RMSRE: {RMSRE(data_true, data_pred):.2f} %', fontsize=10)
+    plt.title(f'$R^2$={r2:.2f}, RMSE={np.sqrt(mse):.2f}, RMSRE: {RMSRE(data_true, data_pred, order=1):.2f} %,  RMSRE: {RMSRE(data_true, data_pred):.2f} %', fontsize=10)
     plt.grid(color='gray', linestyle='--', linewidth=0.25)
+    
+def plot_identity_keras(model, X_test, Y_test):
+    """
+    """
+    Y_hat_test = model.predict(X_test)
+    Y_hat_test = Y_hat_test.reshape(Y_hat_test.shape[0],)
+    plot_identity_graphic(Y_test, Y_hat_test)
 
 
 def plot_boxplot_input(data, data_labels, name=''):
@@ -28,13 +35,19 @@ def plot_boxplot_input(data, data_labels, name=''):
     plt.grid(':', linewidth=0.25)
     plt.title('Boxplot of the ' + name + ' variables')
 
-def RMSRE(true_values, predict_values):
+def RMSRE(true_values, predict_values, order=2):
     """
     Evaluate metric
     """
-    relativeSE = ((predict_values-true_values)*100/true_values)**2
+    relativeSE = ((predict_values-true_values)*100/true_values)**order
     MrelativeSE = np.mean( relativeSE )
-    return np.sqrt(MrelativeSE)
+    if order == 1:
+        return MrelativeSE
+    elif order == 2:
+        return np.sqrt(MrelativeSE)
+    elif order == 3:
+        return np.cbrt(MrelativeSE)
+    return None
 
 
 
@@ -95,3 +108,28 @@ def plot_rnn_keras(model):
                              linestyle='dashed', alpha= abs(layer[i_from][i_to])/node_max)
 
     plt.show()
+    
+def evaluate(model, X_train, X_test, Y_train, Y_test):
+    """
+    
+    """
+    Y_hat_train = model.predict(X_train)
+    Y_hat_train = Y_hat_train.reshape(Y_hat_train.shape[0],)
+    Y_hat_test = model.predict(X_test)
+    Y_hat_test = Y_hat_test.reshape(Y_hat_test.shape[0],)
+    
+    print(f'Train: {mse_f(Y_train, Y_hat_train):.4f}')
+    print(f'Test: {mse_f(Y_test, Y_hat_test):.4f}')
+    return
+
+def load_model(path='500_dados.hdf5'):
+    """
+    
+    """
+    model = Sequential()
+    model.add(Dense(25, input_dim=X_train.shape[1], activation='exponential'))
+    model.add(Dense(11, activation='sigmoid', ))
+    model.add(Dense(3, activation='exponential'))
+    model.add(Dense(1))
+    model.load_weights('500_dados.hdf5')
+    return model
