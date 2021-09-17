@@ -98,6 +98,7 @@ class steadyState:
         """
         k1 = self.constant_rate(T, self.k01, self.Ea1)
         k2 = self.constant_rate(T, self.k02, self.Ea2)
+        return -k1 + k2
         return -k1*Ca*Cb + k2*Cc*Cd
         
     def dcadt(self, C, t):
@@ -137,7 +138,7 @@ def ss_solve(data, isothermal=True):
     for row in range( data.shape[0] ):
         s = steadyState(data.loc[row], isothermal)
         out.append(fsolve(s.dcadt,
-                         [s.Cae, s.Cbe, s.Cce, s.Cde, s.T]))
+                         [s.Cae, s.Cbe, s.Cce, s.Cde, s.T], args=(1,)))
     return pd.DataFrame(out, columns=['Ca', 'Cb', 'Cc', 'Cd', 'T'])
 
 def ode_solve(data, n, t=10, row=0, isothermal=True):

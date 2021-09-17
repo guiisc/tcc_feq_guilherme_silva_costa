@@ -1,7 +1,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
 from sklearn.metrics import mean_squared_error as mse_f, r2_score
-from keras.models import load_model
+import keras
 
 
 def plot_identity_graphic(data_true, data_pred):
@@ -28,7 +28,7 @@ def plot_identity_graphic(data_true, data_pred):
     plt.legend()
     plt.xlabel('true value')
     plt.ylabel('predicted value')
-    plt.title(f'$R^2$={r2:.2f}, RMSE={np.sqrt(mse):.2f}, RMSRE: {RMSRE(data_true, data_pred, order=1):.2f} %,  RMSRE: {RMSRE(data_true, data_pred):.2f} %', fontsize=10)
+    plt.title(f'$R^2$={r2:.2f}, RMSE={np.sqrt(mse):.2f},  RMSRE: {RMSRE(data_true, data_pred):.2f} %', fontsize=10)
     plt.grid(color='gray', linestyle='--', linewidth=0.25)
     
     return
@@ -228,5 +228,5 @@ def load_model(path='models/500_dados.hdf5'):
     
     :return: (keras.engine.sequential)
     """
-    model = load_model(path)
+    model = keras.models.load_model(path, compile=True)
     return model
