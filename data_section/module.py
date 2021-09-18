@@ -98,7 +98,6 @@ class steadyState:
         """
         k1 = self.constant_rate(T, self.k01, self.Ea1)
         k2 = self.constant_rate(T, self.k02, self.Ea2)
-        return -k1 + k2
         return -k1*Ca*Cb + k2*Cc*Cd
         
     def dcadt(self, C, t):
@@ -122,6 +121,7 @@ class steadyState:
             dcdt[4] = 0
         else:
             dcdt[4] = (self.T - T)/self.t_spacial - self.dHr*ra/(self.rho* self.Cp)
+        
         return dcdt
 
 
@@ -139,7 +139,17 @@ def ss_solve(data, isothermal=True):
         s = steadyState(data.loc[row], isothermal)
         out.append(fsolve(s.dcadt,
                          [s.Cae, s.Cbe, s.Cce, s.Cde, s.T], args=(1,)))
-    return pd.DataFrame(out, columns=['Ca', 'Cb', 'Cc', 'Cd', 'T'])
+    output = pd.DataFrame(out, columns=['Ca', 'Cb', 'Cc', 'Cd', 'T'])
+    
+    
+    invalid_index = output[output<=0].dropna(how='all').index
+    mins = output.loc[invalid_index].min(axis=1).values
+#     return output, mins, invalid_index
+    output.loc[invalid_index, 'Ca'] -= mins
+    output.loc[invalid_index, 'Cb'] -= mins
+    output.loc[invalid_index, 'Cc'] += mins
+    output.loc[invalid_index, 'Cd'] += mins
+    return output
 
 def ode_solve(data, n, t=10, row=0, isothermal=True):
     """
@@ -161,7 +171,10 @@ def ode_solve(data, n, t=10, row=0, isothermal=True):
                               [s.Cae, s.Cbe, s.Cce, s.Cde, s.T],
                               t),
                        columns=['Ca', 'Cb', 'Cc', 'Cd', 'T'], index=t)
-    out = out[out>=0].dropna()
+    
+    invalid_index = out[out<=0].dropna(how='all').index
+    out.loc[invalid_index] = np.nan
+    out = out.fillna(method='ffill')
     return out
 
 def ode_plot(ode_solved):

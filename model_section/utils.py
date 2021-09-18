@@ -3,6 +3,23 @@ import matplotlib.pyplot as plt
 from sklearn.metrics import mean_squared_error as mse_f, r2_score
 import keras
 
+def loss_RMSRE(true_values, predict_values):
+    """
+    Root mean squared relative error metric, evaluates on average how much the predicted is off to the true value.
+    
+    Parameters:
+    -----------
+    :param data_true (numpy.array): true values of the comparison plot
+    :param data_pred (numpy.array): predicted values of the comparison plot
+    
+    :return (float): RMSRE
+    
+    Note: mean( ((predict_values-true_values)/true_values)**order )
+    """
+    relativeSE = ((predict_values-true_values)*100/true_values)**2
+    MrelativeSE = keras.backend.mean( relativeSE )
+    return keras.backend.sqrt(MrelativeSE)
+    
 
 def plot_identity_graphic(data_true, data_pred):
     """
