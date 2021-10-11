@@ -1,4 +1,11 @@
-<div style="width: 100%; display: table;">
+<p float="left">
+    <img src="https://user-images.githubusercontent.com/62407390/136826875-b4ea9b8a-8d20-4dd2-9961-ff2f591d6dce.png" width='100'>
+    &nbsp; &nbsp; &nbsp; &nbsp;
+    <img src="https://user-images.githubusercontent.com/62407390/136826892-53b55b9b-d29d-48e8-ac35-de286d26a0ad.png" align="right">
+</p>
+
+
+<!-- <div style="width: 100%; display: table;">
     <div style="display: table-row">
     <div style="display: table-cell; width=200px">
         <img src="https://user-images.githubusercontent.com/62407390/136826875-b4ea9b8a-8d20-4dd2-9961-ff2f591d6dce.png" width='100'>
@@ -7,7 +14,7 @@
         <img src="https://user-images.githubusercontent.com/62407390/136826892-53b55b9b-d29d-48e8-ac35-de286d26a0ad.png">
     </div>
     </div>
-</div>
+</div> -->
 
 <head>
     <h1 align="center"><b> Trabalho de Conclusão de Curso - FEQ/UNICAMP 2S/2021 Guilherme Silva Costa </b> </h1>
