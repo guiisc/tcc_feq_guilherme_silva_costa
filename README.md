@@ -25,7 +25,7 @@
 <hr />
 
 <h2><b> Objetivos: </b></h2>
-    Este trabalho tem por objetivo avaliar a viabilidade e performance de um modelo de rede neural artificial partindo de dados pseudo-experimentais de um reator contínuo de mistura no estado estacionário com regimes isotérmico e adiabático, buscando estimar a concentração de saída de produto.
+    Este trabalho busca avaliar a viabilidade e performance de um modelo de rede neural artificial partindo de dados pseudo-experimentais de um reator contínuo de mistura no estado estacionário com regimes isotérmico e adiabático, buscando estimar a concentração de saída de produto.
 
 
 <h2><b> Resumo: </b></h2>
