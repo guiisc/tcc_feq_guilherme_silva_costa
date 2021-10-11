@@ -1,19 +1,19 @@
+<div width="100%">
+    <div style="float: left">
+        <img src="https://user-images.githubusercontent.com/62407390/136826875-b4ea9b8a-8d20-4dd2-9961-ff2f591d6dce.png" width='100'>
+    </div>
+    <div style = "float: right">
+        <img src="https://user-images.githubusercontent.com/62407390/136826892-53b55b9b-d29d-48e8-ac35-de286d26a0ad.png">
+    </div>
+</div>
+
 <div>
-<div style="width: 100px; float: left">
-<img src="https://user-images.githubusercontent.com/62407390/136826875-b4ea9b8a-8d20-4dd2-9961-ff2f591d6dce.png" width='100'>
-</div>
-
-<div style = "float: right">
-<img src="https://user-images.githubusercontent.com/62407390/136826892-53b55b9b-d29d-48e8-ac35-de286d26a0ad.png">
-</div>
-</div>
-
-<head>
-    <h1 align="center"><b> Trabalho de Conclusão de Curso - FEQ/UNICAMP 2S/2021 Guilherme Silva Costa </b> </h1>
-    <h2 align="center"> Criação de modelos alternativos utilizando redes neurais artificiais em um reator CSTR </h2>
-    <h2 align="center"> Orientador: Roger Josef Zemp </h2>
-</head>
-
+        <head>
+            <h1 align="center"><b> Trabalho de Conclusão de Curso - FEQ/UNICAMP 2S/2021 Guilherme Silva Costa </b> <br>Criação de modelos alternativos utilizando redes neurais artificiais em um reator CSTR
+            <br> Orientador: Roger Josef Zemp
+            </h1>
+        </head>
+    </div>
 <hr />
 
 <h2><b> Objetivos: </b></h2>
