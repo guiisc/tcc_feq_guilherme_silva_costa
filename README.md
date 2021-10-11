@@ -9,13 +9,9 @@
 </div>
 
 <head>
-    <style>
-        .heading { 
-        text-align: center; 
-    } </style>
-    <h1 class="heading"><b> Trabalho de Conclusão de Curso - FEQ/UNICAMP 2S/2021 Guilherme Silva Costa </b> </h1>
-    <h2 class="heading"> Criação de modelos alternativos utilizando redes neurais artificiais em um reator CSTR </h2>
-    <h2 class="heading"> Orientador: Roger Josef Zemp </h2>
+    <h1 align="center"><b> Trabalho de Conclusão de Curso - FEQ/UNICAMP 2S/2021 Guilherme Silva Costa </b> </h1>
+    <h2 align="center"> Criação de modelos alternativos utilizando redes neurais artificiais em um reator CSTR </h2>
+    <h2 align="center"> Orientador: Roger Josef Zemp </h2>
 </head>
 
 <hr />
