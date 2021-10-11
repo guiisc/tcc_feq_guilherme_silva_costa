@@ -174,14 +174,15 @@ def plot_rnn_keras(model):
     Note: best to visualize for networks with not so many layers nor neurons
     """
     def nodes(model):
-        lim_max = int(len(model)/4)
-        lim_min = -int(len(model)/4)
-        d = (lim_max - lim_min)/4
-
+        lim_max = 1
+        lim_min = -1
+        d = (lim_max - lim_min)*2/len(model)
+        
         x_aux = np.linspace(0, 1, num=int(len(model)/2)+1)
         y_axis = []
         x_axis = []
         for idx, i in enumerate(range(0, len(model), 2)):
+
             y_aux = np.linspace(0, 1, model[i].shape[0])
             y_axis.append(y_aux)
 
@@ -192,12 +193,12 @@ def plot_rnn_keras(model):
         return np.array(x_axis, dtype=object), np.array(y_axis, dtype=object)
 
     x_axis, y_axis = nodes(model.get_weights())
+    
     plt.figure(figsize=(10, 8))
     plt.axis('off')
     for i in range(x_axis.shape[0]):
         layer_idx = i*2
         plt.plot(x_axis[i], y_axis[i], 'ko', fillstyle='none', markersize=15)
-
         if layer_idx < len(model.get_weights()):
             layer = model.get_weights()[layer_idx]
             node_max = abs(layer).max()
@@ -206,11 +207,11 @@ def plot_rnn_keras(model):
             x_to = x_axis[i+1][0]
             for i_from, y_from in enumerate(y_axis[i]):
                 for i_to, y_to in enumerate(y_axis[i+1]):
-                    pass
                     plt.plot([x_from, x_to], [y_from, y_to], color='black',
                              linestyle='dashed', alpha= abs(layer[i_from][i_to])/node_max)
 
     plt.show()
+    return
     
 def evaluate(model, X_train, X_test, Y_train, Y_test):
     """

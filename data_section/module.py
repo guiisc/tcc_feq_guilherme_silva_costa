@@ -41,7 +41,7 @@ class steadyState:
     """
     Define a EDO system that can be used to evaluate the steady state as well the reactor startup
     """
-    def __init__(self, data, isothermal=True):
+    def __init__(self, data, isothermal=True, order2=True):
         """
         Instanciate a class with the initial data as well the properties data.
         
@@ -61,13 +61,14 @@ class steadyState:
         self.k02 = data['k02']
         self.Ea2 = data['Ea2']
         
-        self.T = data['T']
+        self.T = data['Te']
         self.t_spacial = data['t_spacial']
         self.dHr = data['dHr']
         self.rho = data['rho']
         self.Cp = data['Cp']
         
         self.isothermal = isothermal
+        self.order2 = order2
     
     def constant_rate(self, T, k0, Ea, R=8.314):
         """
@@ -98,7 +99,9 @@ class steadyState:
         """
         k1 = self.constant_rate(T, self.k01, self.Ea1)
         k2 = self.constant_rate(T, self.k02, self.Ea2)
-        return -k1*Ca*Cb + k2*Cc*Cd
+        if self.order2:
+            return -k1*Ca*Cb + k2*Cc*Cd
+        return -k1 + k2
         
     def dcadt(self, C, t):
         """
@@ -125,7 +128,7 @@ class steadyState:
         return dcdt
 
 
-def ss_solve(data, isothermal=True):
+def ss_solve(data, isothermal=True, order2=True):
     """
     Solve the ODE system for the steady state, for all initial points in data
     
@@ -136,7 +139,7 @@ def ss_solve(data, isothermal=True):
     """
     out = []
     for row in range( data.shape[0] ):
-        s = steadyState(data.loc[row], isothermal)
+        s = steadyState(data.loc[row], isothermal, order2)
         out.append(fsolve(s.dcadt,
                          [s.Cae, s.Cbe, s.Cce, s.Cde, s.T], args=(1,)))
     output = pd.DataFrame(out, columns=['Ca', 'Cb', 'Cc', 'Cd', 'T'])
@@ -151,7 +154,7 @@ def ss_solve(data, isothermal=True):
     output.loc[invalid_index, 'Cd'] += mins
     return output
 
-def ode_solve(data, n, t=10, row=0, isothermal=True):
+def ode_solve(data, n, t=10, row=0, isothermal=True, order2=True):
     """
     Solve a ODE system based on initial values in data
     
@@ -166,7 +169,7 @@ def ode_solve(data, n, t=10, row=0, isothermal=True):
     :return (pandas.DataFrame): Solution through time of the system.
     """
     t = np.linspace(0, t, n)
-    s = steadyState(data.loc[row], isothermal)
+    s = steadyState(data.loc[row], isothermal, order2)
     out = pd.DataFrame(odeint(s.dcadt,
                               [s.Cae, s.Cbe, s.Cce, s.Cde, s.T],
                               t),
@@ -189,7 +192,7 @@ def ode_plot(ode_solved):
     axis_x = ode_solved.index/60
     ax1 = plt.plot(axis_x, ode_solved[['Ca', 'Cb', 'Cc', 'Cd']]*100/ode_solved['Ca'][0], label=['Ca', 'Cb', 'Cc', 'Cd'], linewidth=2)
     plt.xlabel('tempo [min]')
-    plt.ylabel('%')
+    plt.ylabel('C/$C_a$ [%]')
     plt.grid()
     
     # Temperature axis
